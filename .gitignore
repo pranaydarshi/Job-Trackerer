@@ -1,0 +1,17 @@
+# Node dependencies
+server/node_modules/
+node_modules/
+
+# Environment variables
+server/.env
+.env
+
+# MacOS/Windows system files
+.DS_Store
+Thumbs.db
+
+# Logs
+npm-debug.log*
+server/out.txt
+server/out2.txt
+server/out.log

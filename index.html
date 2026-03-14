@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Job Application Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <!-- ── App Shell ─────────────────────────────────────────── -->
+  <div id="app">
+
+    <header class="app-header">
+      <div class="header-brand">
+        <span class="brand-logo">&#9724;</span>
+        <div>
+          <h1 class="app-title">JobTracker</h1>
+          <span class="app-subtitle">All your applications, one place</span>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-gmail" id="btn-gmail-import">📧 Import from Gmail</button>
+        <button class="btn btn-primary" id="btn-add-job">+ Add Application</button>
+      </div>
+    </header>
+
+    <main class="main-content">
+      <section id="stats-container"></section>
+      <section id="filter-container"></section>
+      <section id="table-container"></section>
+    </main>
+
+  </div>
+
+  <!-- ── Add / Edit Modal ──────────────────────────────────── -->
+  <div class="modal-overlay" id="modal-overlay" style="display:none">
+    <div class="modal" id="job-modal"></div>
+  </div>
+
+  <!-- ── Delete Confirm Modal ──────────────────────────────── -->
+  <div class="modal-overlay" id="delete-overlay" style="display:none">
+    <div class="modal modal-sm" id="delete-modal"></div>
+  </div>
+
+  <!-- ── Gmail Import Modal ───────────────────────────────── -->
+  <div class="modal-overlay" id="gmail-overlay" style="display:none">
+    <div class="modal" id="gmail-modal" style="max-width:680px"></div>
+  </div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
