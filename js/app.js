@@ -38,6 +38,7 @@ import {
 
 // ── Utilities ─────────────────────────────────────────────
 import { generateId } from './utils/helpers.js';
+import { exportJobsToCSV } from './utils/export.js';
 
 // ── Persistent DOM references ─────────────────────────────
 // These elements are always in the DOM (they never get replaced).
@@ -144,6 +145,17 @@ document.addEventListener('click', e => {
   // Header
   if (t.id === 'btn-add-job') { openAddModal(); return; }
   if (t.id === 'btn-gmail-import') { openGmailModal(); return; }
+  
+  if (t.id === 'btn-export-csv') { 
+    const currentJobs = getFilteredJobs();
+    if (currentJobs.length === 0) {
+      showToast('No jobs to export.');
+      return;
+    }
+    exportJobsToCSV(currentJobs);
+    showToast(`Exported ${currentJobs.length} application(s) to CSV!`);
+    return;
+  }
 
   // Table: sort and row actions
   if (t.dataset?.sort)                 { setSort(t.dataset.sort); return; }
