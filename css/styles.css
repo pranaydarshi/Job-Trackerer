@@ -81,9 +81,10 @@ a { text-decoration: none; }
 }
 
 .brand-logo {
-  font-size: 22px;
-  color: var(--blue);
-  line-height: 1;
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  border-radius: 6px;
 }
 
 .app-title {
