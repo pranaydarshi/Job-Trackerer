@@ -10,6 +10,7 @@
  */
 
 import { esc } from '../utils/helpers.js';
+import { getState } from '../state/store.js';
 
 const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 const API_BASE = isLocal ? 'http://localhost:3001' : 'https://job-tracker-ooak.onrender.com';
@@ -92,7 +93,17 @@ export async function scanEmails(days = 30, onUpdate) {
     }
 
     const data = await res.json();
-    importState.jobs = data.jobs || [];
+    
+    // Deduplicate against already tracked jobs in the user's browser
+    const existingJobs = getState().jobs;
+    const isDuplicate = (newJob) => {
+      return existingJobs.some(existing => 
+        existing.company.toLowerCase() === newJob.company.toLowerCase() &&
+        existing.role.toLowerCase() === newJob.role.toLowerCase()
+      );
+    };
+
+    importState.jobs = (data.jobs || []).filter(job => !isDuplicate(job));
     importState.totalEmails = data.totalEmails || 0;
     importState.selected = new Set(importState.jobs.map((_, i) => i)); // select all by default
     importState.status = 'done';
