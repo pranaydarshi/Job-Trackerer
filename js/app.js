@@ -200,10 +200,15 @@ document.addEventListener('click', e => {
   if (t.id === 'btn-close-resume-modal' || t.id === 'btn-close-resume-modal-x') { closeResumeModal(); return; }
   if (t.id === 'btn-reset-resume-check') { resetCheckerState(); renderResumeModal(); return; }
   if (t.id === 'btn-submit-resume-check') {
-    const rText = document.getElementById('resume-text').value.trim();
+    const fileInput = document.getElementById('resume-file');
     const jDesc = document.getElementById('resume-job-desc').value.trim();
-    if (!rText || !jDesc) { showToast('Please enter both resume and job description.'); return; }
-    submitResumeCheck(rText, jDesc, renderResumeModal);
+    const file = fileInput?.files[0];
+    
+    if (!file) { showToast('Please select a PDF file first.'); return; }
+    if (file.type !== 'application/pdf') { showToast('Please upload a valid PDF file.'); return; }
+    if (file.size > 5 * 1024 * 1024) { showToast('File is too large. Max 5MB allowed.'); return; }
+    
+    submitResumeCheck(file, jDesc, renderResumeModal);
     return;
   }
 

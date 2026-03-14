@@ -42,7 +42,7 @@ app.use(cors({
   credentials: true,
 }));
 
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 
 // ── Sessions ─────────────────────────────────────────────
 const isProd = process.env.NODE_ENV === 'production';
@@ -241,34 +241,37 @@ app.post('/api/check-resume', async (req, res) => {
   }
 
   try {
-    const { resumeText, jobDescription } = req.body;
-    if (!resumeText || !jobDescription) {
-      return res.status(400).json({ error: 'Missing resume text or job description.' });
+    const { resumeBase64, jobDescription } = req.body;
+    if (!resumeBase64) {
+      return res.status(400).json({ error: 'Missing resume file.' });
     }
 
-    const prompt = `You are a strict, expert technical recruiter and resume reviewer. 
-The user is applying for a job described below. Evaluate their resume against this job description.
-
-Job Description:
-"""
-${jobDescription}
-"""
-
-Applicant's Resume:
-"""
-${resumeText}
-"""
-
-Please provide your evaluation in the following structure using clean Markdown:
-- **Match Score**: Rate the match out of 100%.
-- **Strengths**: 3 strong areas in the resume for this role.
-- **Missing Keywords**: Key technical or soft skills mentioned in the JD but missing in the resume.
-- **Actionable Recommendations**: 3 specific recommendations to improve the resume for this exact role.
-Be concise and constructive.`;
+    let prompt = `You are a strict, expert technical recruiter and resume reviewer.\n`;
+    if (jobDescription && jobDescription.trim() !== '') {
+      prompt += `The user is applying for a job described below. Evaluate their resume against this job description.\n\nJob Description:\n"""\n${jobDescription}\n"""\n\n`;
+      prompt += `Please provide your evaluation in the following structure using clean Markdown:\n`;
+      prompt += `- **Match Score**: Rate the match out of 100%.\n`;
+      prompt += `- **Strengths**: 3 strong areas in the resume for this role.\n`;
+      prompt += `- **Missing Keywords**: Key technical or soft skills mentioned in the JD but missing in the resume.\n`;
+      prompt += `- **Actionable Recommendations**: 3 specific recommendations to improve the resume for this exact role.\n`;
+    } else {
+      prompt += `Evaluate the provided resume for general ATS (Applicant Tracking System) optimization and standard best practices since no target job description was provided.\n\n`;
+      prompt += `Please provide your evaluation in the following structure using clean Markdown:\n`;
+      prompt += `- **Overall ATS Score**: Rate the general ATS score out of 100%.\n`;
+      prompt += `- **Strengths**: 3 strong formatting or content areas in the resume.\n`;
+      prompt += `- **Weaknesses/Missing Elements**: Areas where the resume lacks detail, impact, or ATS friendliness.\n`;
+      prompt += `- **Actionable Recommendations**: 3 specific recommendations to improve the resume generally.\n`;
+    }
+    prompt += `Be concise and constructive. Analyze the attached PDF document.`;
 
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
-      contents: prompt,
+      contents: [
+        { role: 'user', parts: [
+          { text: prompt },
+          { inlineData: { data: resumeBase64, mimeType: 'application/pdf' } }
+        ]}
+      ]
     });
 
     res.json({ result: response.text });

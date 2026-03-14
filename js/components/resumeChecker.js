@@ -15,7 +15,7 @@ const checkerState = {
   status: 'idle', // 'idle' | 'loading' | 'error' | 'done'
   error: null,
   result: null,
-  resumeText: '',
+  fileName: '',
   jobDesc: ''
 };
 
@@ -28,7 +28,7 @@ export function resetCheckerState() {
   checkerState.status = 'idle';
   checkerState.error = null;
   checkerState.result = null;
-  checkerState.resumeText = '';
+  checkerState.fileName = '';
   checkerState.jobDesc = '';
 }
 
@@ -46,17 +46,29 @@ function parseMarkdown(md) {
   return html.replace(/\n/g, '<br/>');
 }
 
-export async function submitResumeCheck(resumeText, jobDescription, onUpdate) {
+export async function submitResumeCheck(file, jobDescription, onUpdate) {
   checkerState.status = 'loading';
-  checkerState.resumeText = resumeText;
+  checkerState.fileName = file.name;
   checkerState.jobDesc = jobDescription;
   if (onUpdate) onUpdate();
 
   try {
+    // Read file as base64
+    const base64Data = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        // reader.result is "data:application/pdf;base64,....."
+        const base64Str = reader.result.split(',')[1];
+        resolve(base64Str);
+      };
+      reader.onerror = (err) => reject(err);
+      reader.readAsDataURL(file);
+    });
+
     const res = await fetch(`${API_BASE}/api/check-resume`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ resumeText, jobDescription }),
+      body: JSON.stringify({ resumeBase64: base64Data, jobDescription }),
     });
 
     const data = await res.json();
@@ -75,19 +87,22 @@ export async function submitResumeCheck(resumeText, jobDescription, onUpdate) {
 }
 
 export function renderResumeCheckerModal() {
-  const { status, error, result, resumeText, jobDesc } = checkerState;
+  const { status, error, result, jobDesc } = checkerState;
 
   let body = '';
 
   if (status === 'idle' || status === 'error') {
     body = `
       <div class="form-group">
-        <label class="form-label" for="resume-job-desc">Target Job Description</label>
-        <textarea id="resume-job-desc" class="form-control" rows="4" placeholder="Paste the exact job description here..." style="resize:vertical">${esc(jobDesc)}</textarea>
+        <label class="form-label" for="resume-job-desc">Target Job Description (Optional)</label>
+        <textarea id="resume-job-desc" class="form-control" rows="4" placeholder="Paste a job description to tailor the feedback, or leave blank for a general ATS score..." style="resize:vertical">${esc(jobDesc)}</textarea>
       </div>
       <div class="form-group">
-        <label class="form-label" for="resume-text">Your Resume Text</label>
-        <textarea id="resume-text" class="form-control" rows="6" placeholder="Paste all text from your resume here..." style="resize:vertical">${esc(resumeText)}</textarea>
+        <label class="form-label" for="resume-file">Upload Resume (PDF)</label>
+        <div style="border: 2px dashed var(--border); border-radius: 8px; padding: 24px; text-align: center; background: #fafafa; margin-top: 4px;">
+          <input type="file" id="resume-file" accept=".pdf" style="margin: 0 auto; display: block;">
+          <p style="margin-top: 8px; font-size: 13px; color: var(--text-muted);">Only .pdf files are supported (Max 5MB).</p>
+        </div>
       </div>
       ${status === 'error' ? `<div style="color:var(--red);margin-bottom:12px;font-size:13px">⚠ ${esc(error)}</div>` : ''}
       <div class="modal-footer" style="padding-top:16px;">

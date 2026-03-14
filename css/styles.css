@@ -80,6 +80,14 @@ a { text-decoration: none; }
   gap: 12px;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
 .brand-logo {
   width: 28px;
   height: 28px;
