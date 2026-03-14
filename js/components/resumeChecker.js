@@ -99,9 +99,9 @@ export function renderResumeCheckerModal() {
       </div>
       <div class="form-group">
         <label class="form-label" for="resume-file">Upload Resume (PDF)</label>
-        <div style="border: 2px dashed var(--border); border-radius: 8px; padding: 24px; text-align: center; background: #fafafa; margin-top: 4px;">
+        <div id="resume-drop-zone" style="border: 2px dashed var(--border); border-radius: 8px; padding: 24px; text-align: center; background: #fafafa; margin-top: 4px; transition: all 0.2s;">
           <input type="file" id="resume-file" accept=".pdf" style="margin: 0 auto; display: block;">
-          <p style="margin-top: 8px; font-size: 13px; color: var(--text-muted);">Only .pdf files are supported (Max 5MB).</p>
+          <p style="margin-top: 8px; font-size: 13px; color: var(--text-muted);">Drag and drop a PDF here, or click to browse (Max 5MB).</p>
         </div>
       </div>
       ${status === 'error' ? `<div style="color:var(--red);margin-bottom:12px;font-size:13px">⚠ ${esc(error)}</div>` : ''}

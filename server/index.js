@@ -288,20 +288,29 @@ app.post('/api/prep-interview', async (req, res) => {
 
   try {
     const { role, company } = req.body;
-    if (!role || !company) {
-      return res.status(400).json({ error: 'Missing role or company name.' });
+    if (!role) {
+      return res.status(400).json({ error: 'Missing role.' });
     }
 
-    const prompt = `You are an expert interview coach for top-tier companies.
-The user is preparing for a job interview for the role of "${role}" at the company "${company}".
-
-Provide a comprehensive, tailored interview preparation guide. Include the following using clean Markdown:
-- **Company Context**: A very brief sentence about ${company}'s known culture or interview style if applicable.
-- **Behavioral Questions**: 3 highly likely cultural or behavioral questions specific to ${company}.
-- **Technical Questions**: 3 likely role-specific questions for a "${role}".
-- **Questions to Ask**: 2 strategic questions the candidate should ask the interviewer at the end.
-- **Pro-Tips**: Top 3 general tips to succeed in this specific interview.
-Be extremely specific to the known or assumed nature of ${company} and the ${role}.`;
+    let prompt = `You are an expert interview coach.\n`;
+    if (company && company.trim() !== '') {
+      prompt += `The user is preparing for a job interview for the role of "${role}" at the company "${company}".\n\n`;
+      prompt += `Provide a comprehensive, tailored interview preparation guide. Include the following using clean Markdown:\n`;
+      prompt += `- **Company Context**: A very brief sentence about ${company}'s known culture or interview style if applicable.\n`;
+      prompt += `- **Behavioral Questions**: 3 highly likely cultural or behavioral questions specific to ${company}.\n`;
+      prompt += `- **Technical Questions**: 3 likely role-specific questions for a "${role}".\n`;
+      prompt += `- **Questions to Ask**: 2 strategic questions the candidate should ask the interviewer at the end.\n`;
+      prompt += `- **Pro-Tips**: Top 3 general tips to succeed in this specific interview.\n`;
+      prompt += `Be extremely specific to the known or assumed nature of ${company} and the ${role}.`;
+    } else {
+      prompt += `The user is preparing for a job interview for the role of "${role}".\n\n`;
+      prompt += `Provide a comprehensive, tailored interview preparation guide. Include the following using clean Markdown:\n`;
+      prompt += `- **Role Context**: A brief overview of what interviewers generally look for in a "${role}".\n`;
+      prompt += `- **Behavioral Questions**: 3 common behavioral questions for this level of role.\n`;
+      prompt += `- **Technical Questions**: 3 highly relevant technical or role-specific questions for a "${role}".\n`;
+      prompt += `- **Questions to Ask**: 2 strategic questions the candidate should ask the interviewer at the end.\n`;
+      prompt += `- **Pro-Tips**: Top 3 general tips to succeed in interviews for this role.`;
+    }
 
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',

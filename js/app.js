@@ -218,7 +218,7 @@ document.addEventListener('click', e => {
   if (t.id === 'btn-submit-prep') {
     const role = document.getElementById('prep-role').value.trim();
     const company = document.getElementById('prep-company').value.trim();
-    if (!role || !company) { showToast('Please enter both role and company.'); return; }
+    if (!role) { showToast('Please enter a target role.'); return; }
     submitInterviewPrep(role, company, renderPrepModal);
     return;
   }
@@ -229,6 +229,42 @@ document.addEventListener('click', e => {
   if (t.id === 'gmail-overlay' ) { closeGmailModal(); return; }
   if (t.id === 'resume-overlay') { closeResumeModal(); return; }
   if (t.id === 'prep-overlay'  ) { closePrepModal(); return; }
+});
+
+// Drag and drop for Resume Checker
+document.addEventListener('dragover', e => {
+  const dropZone = e.target.closest('#resume-drop-zone');
+  if (dropZone) {
+    e.preventDefault();
+    dropZone.style.background = '#eef2ff';
+    dropZone.style.borderColor = 'var(--blue)';
+  }
+});
+document.addEventListener('dragleave', e => {
+  const dropZone = e.target.closest('#resume-drop-zone');
+  if (dropZone) {
+    e.preventDefault();
+    dropZone.style.background = '#fafafa';
+    dropZone.style.borderColor = 'var(--border)';
+  }
+});
+document.addEventListener('drop', e => {
+  const dropZone = e.target.closest('#resume-drop-zone');
+  if (dropZone) {
+    e.preventDefault();
+    dropZone.style.background = '#fafafa';
+    dropZone.style.borderColor = 'var(--border)';
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      const fileInput = document.getElementById('resume-file');
+      if (fileInput) {
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(file);
+        fileInput.files = dataTransfer.files;
+        showToast('File attached: ' + file.name);
+      }
+    }
+  }
 });
 
 // Search input (debounced)

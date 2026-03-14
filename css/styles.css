@@ -724,6 +724,8 @@ textarea.form-control {
 /* ── 18. Responsive ───────────────────────────────────────── */
 @media (max-width: 860px) {
   .app-subtitle { display: none; }
+  .header-actions .btn-text { display: none; }
+  .header-actions .btn { padding: 9px; }
   .main-content { padding: 16px; }
   .stats-grid   { grid-template-columns: repeat(3, 1fr); }
 }

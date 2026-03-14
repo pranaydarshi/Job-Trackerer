@@ -86,8 +86,8 @@ export function renderInterviewPrepModal() {
         <input type="text" id="prep-role" class="form-control" placeholder="e.g. Senior Frontend Engineer" value="${esc(role)}">
       </div>
       <div class="form-group">
-        <label class="form-label" for="prep-company">Target Company</label>
-        <input type="text" id="prep-company" class="form-control" placeholder="e.g. Stripe, AWS, Startup LLC" value="${esc(company)}">
+        <label class="form-label" for="prep-company">Target Company (Optional)</label>
+        <input type="text" id="prep-company" class="form-control" placeholder="e.g. Stripe, AWS (leave blank for general prep)" value="${esc(company)}">
       </div>
       ${status === 'error' ? `<div style="color:var(--red);margin-bottom:12px;font-size:13px">⚠ ${esc(error)}</div>` : ''}
       <div class="modal-footer" style="padding-top:16px;">
