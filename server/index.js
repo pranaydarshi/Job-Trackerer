@@ -22,11 +22,16 @@ const { parseEmail } = require('./emailParser');
 const app  = express();
 const PORT = process.env.PORT || 3001;
 
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
+const BACKEND_URL  = process.env.BACKEND_URL  || `http://localhost:${PORT}`;
+
 // ── CORS ─────────────────────────────────────────────────
 // Allow the frontend (http-server on port 3000) to call us.
 
+app.set('trust proxy', 1); // Trust Render proxy for Secure cookies
+
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://127.0.0.1:3000'],
+  origin: [FRONTEND_URL, 'http://localhost:3000', 'http://127.0.0.1:3000', 'https://pranaydarshi.github.io'],
   credentials: true,
 }));
 
@@ -35,15 +40,17 @@ app.use(express.json());
 // ── Sessions ─────────────────────────────────────────────
 // Store OAuth tokens in server-side session (never sent to browser).
 
+const isProd = process.env.NODE_ENV === 'production';
+
 app.use(session({
   secret: process.env.SESSION_SECRET || 'fallback-secret',
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: false,          // true in production with HTTPS
+    secure: isProd,               // Must be true in production over HTTPS
     httpOnly: true,
     maxAge: 24 * 60 * 60 * 1000,  // 24 hours
-    sameSite: 'lax',
+    sameSite: isProd ? 'none' : 'lax', // 'none' required for cross-domain (GitHub Pages <-> Render)
   },
 }));
 
@@ -53,7 +60,7 @@ function createOAuth2Client() {
   return new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID,
     process.env.GOOGLE_CLIENT_SECRET,
-    `http://localhost:${PORT}/auth/google/callback`
+    `${BACKEND_URL}/auth/google/callback`
   );
 }
 
@@ -92,7 +99,7 @@ app.get('/auth/google/callback', async (req, res) => {
     const { tokens } = await oauth2Client.getToken(code);
     req.session.tokens = tokens;
     // Redirect back to the frontend app
-    res.redirect('http://localhost:3000?gmail_connected=1');
+    res.redirect(`${FRONTEND_URL}?gmail_connected=1`);
   } catch (err) {
     console.error('[auth] Token exchange failed:', err.message);
     res.status(500).send('Authentication failed. Please try again.');

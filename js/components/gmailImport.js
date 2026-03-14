@@ -11,7 +11,8 @@
 
 import { esc } from '../utils/helpers.js';
 
-const API_BASE = 'http://localhost:3001';
+const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+const API_BASE = isLocal ? 'http://localhost:3001' : 'https://job-tracker-ooak.onrender.com';
 
 // ── State for the import flow ────────────────────────────
 
