@@ -17,6 +17,7 @@ const express = require('express');
 const session = require('express-session');
 const cors = require('cors');
 const { google } = require('googleapis');
+const { GoogleGenAI } = require('@google/genai');
 const { parseEmail } = require('./emailParser');
 
 const app = express();
@@ -218,6 +219,96 @@ app.get('/api/scan-emails', requireAuth, async (req, res) => {
     }
 
     res.status(500).json({ error: 'Failed to scan emails. Please try again.' });
+  }
+});
+
+// ── AI Tools Initialization ──────────────────────────────
+
+let ai = null;
+try {
+  if (process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY !== 'your-gemini-api-key-here' && process.env.GEMINI_API_KEY !== '"your-gemini-api-key-here"') {
+    ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY.replace(/"/g, '') });
+  }
+} catch (e) {
+  console.warn('⚠️ Google Gen AI SDK failed to initialize. Check GEMINI_API_KEY.');
+}
+
+// ── Routes: AI Tools ─────────────────────────────────────
+
+app.post('/api/check-resume', async (req, res) => {
+  if (!ai) {
+    return res.status(503).json({ error: 'AI features are not configured on the server. Please set GEMINI_API_KEY in server/.env.' });
+  }
+
+  try {
+    const { resumeText, jobDescription } = req.body;
+    if (!resumeText || !jobDescription) {
+      return res.status(400).json({ error: 'Missing resume text or job description.' });
+    }
+
+    const prompt = `You are a strict, expert technical recruiter and resume reviewer. 
+The user is applying for a job described below. Evaluate their resume against this job description.
+
+Job Description:
+"""
+${jobDescription}
+"""
+
+Applicant's Resume:
+"""
+${resumeText}
+"""
+
+Please provide your evaluation in the following structure using clean Markdown:
+- **Match Score**: Rate the match out of 100%.
+- **Strengths**: 3 strong areas in the resume for this role.
+- **Missing Keywords**: Key technical or soft skills mentioned in the JD but missing in the resume.
+- **Actionable Recommendations**: 3 specific recommendations to improve the resume for this exact role.
+Be concise and constructive.`;
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt,
+    });
+
+    res.json({ result: response.text });
+  } catch (err) {
+    console.error('[ai] Resume Check Error:', err);
+    res.status(500).json({ error: 'Failed to generate AI response. Try again later.' });
+  }
+});
+
+app.post('/api/prep-interview', async (req, res) => {
+  if (!ai) {
+    return res.status(503).json({ error: 'AI features are not configured on the server. Please set GEMINI_API_KEY in server/.env.' });
+  }
+
+  try {
+    const { role, company } = req.body;
+    if (!role || !company) {
+      return res.status(400).json({ error: 'Missing role or company name.' });
+    }
+
+    const prompt = `You are an expert interview coach for top-tier companies.
+The user is preparing for a job interview for the role of "${role}" at the company "${company}".
+
+Provide a comprehensive, tailored interview preparation guide. Include the following using clean Markdown:
+- **Company Context**: A very brief sentence about ${company}'s known culture or interview style if applicable.
+- **Behavioral Questions**: 3 highly likely cultural or behavioral questions specific to ${company}.
+- **Technical Questions**: 3 likely role-specific questions for a "${role}".
+- **Questions to Ask**: 2 strategic questions the candidate should ask the interviewer at the end.
+- **Pro-Tips**: Top 3 general tips to succeed in this specific interview.
+Be extremely specific to the known or assumed nature of ${company} and the ${role}.`;
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt,
+    });
+
+    res.json({ result: response.text });
+  } catch (err) {
+    console.error('[ai] Interview Prep Error:', err);
+    res.status(500).json({ error: 'Failed to generate AI response. Try again later.' });
   }
 });
 

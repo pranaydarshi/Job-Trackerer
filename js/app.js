@@ -35,6 +35,8 @@ import {
   scanEmails, disconnectGmail, getImportState, resetImportState,
   toggleJobSelection, toggleAllSelections, getSelectedJobs,
 } from './components/gmailImport.js';
+import { renderResumeCheckerModal, getCheckerState, resetCheckerState, submitResumeCheck } from './components/resumeChecker.js';
+import { renderInterviewPrepModal, getPrepState, resetPrepState, submitInterviewPrep } from './components/interviewPrep.js';
 
 // ── Utilities ─────────────────────────────────────────────
 import { generateId } from './utils/helpers.js';
@@ -51,6 +53,10 @@ const deleteOverlay  = document.getElementById('delete-overlay');
 const deleteEl       = document.getElementById('delete-modal');
 const gmailOverlay   = document.getElementById('gmail-overlay');
 const gmailEl        = document.getElementById('gmail-modal');
+const resumeOverlay  = document.getElementById('resume-overlay');
+const resumeEl       = document.getElementById('resume-modal');
+const prepOverlay    = document.getElementById('prep-overlay');
+const prepEl         = document.getElementById('prep-modal');
 
 // ── Toast helper ──────────────────────────────────────────
 
@@ -145,6 +151,8 @@ document.addEventListener('click', e => {
   // Header
   if (t.id === 'btn-add-job') { openAddModal(); return; }
   if (t.id === 'btn-gmail-import') { openGmailModal(); return; }
+  if (t.id === 'btn-ai-resume') { openResumeModal(); return; }
+  if (t.id === 'btn-ai-prep') { openPrepModal(); return; }
   
   if (t.id === 'btn-export-csv') { 
     const currentJobs = getFilteredJobs();
@@ -188,10 +196,34 @@ document.addEventListener('click', e => {
     return;
   }
 
+  // Resume Checker Modal
+  if (t.id === 'btn-close-resume-modal' || t.id === 'btn-close-resume-modal-x') { closeResumeModal(); return; }
+  if (t.id === 'btn-reset-resume-check') { resetCheckerState(); renderResumeModal(); return; }
+  if (t.id === 'btn-submit-resume-check') {
+    const rText = document.getElementById('resume-text').value.trim();
+    const jDesc = document.getElementById('resume-job-desc').value.trim();
+    if (!rText || !jDesc) { showToast('Please enter both resume and job description.'); return; }
+    submitResumeCheck(rText, jDesc, renderResumeModal);
+    return;
+  }
+
+  // Interview Prep Modal
+  if (t.id === 'btn-close-prep-modal' || t.id === 'btn-close-prep-modal-x') { closePrepModal(); return; }
+  if (t.id === 'btn-reset-prep') { resetPrepState(); renderPrepModal(); return; }
+  if (t.id === 'btn-submit-prep') {
+    const role = document.getElementById('prep-role').value.trim();
+    const company = document.getElementById('prep-company').value.trim();
+    if (!role || !company) { showToast('Please enter both role and company.'); return; }
+    submitInterviewPrep(role, company, renderPrepModal);
+    return;
+  }
+
   // Close modals when clicking the dim overlay backdrop directly
   if (t.id === 'modal-overlay' ) { closeModal();    return; }
   if (t.id === 'delete-overlay') { cancelDelete();  return; }
   if (t.id === 'gmail-overlay' ) { closeGmailModal(); return; }
+  if (t.id === 'resume-overlay') { closeResumeModal(); return; }
+  if (t.id === 'prep-overlay'  ) { closePrepModal(); return; }
 });
 
 // Search input (debounced)
@@ -276,4 +308,40 @@ if (urlParams.get('gmail_connected') === '1') {
   window.history.replaceState({}, '', window.location.pathname);
   // Auto-open the Gmail modal
   setTimeout(() => openGmailModal(), 300);
+}
+
+// ── AI Tools helpers ──────────────────────────────────────
+
+function renderResumeModal() {
+  resumeEl.innerHTML = renderResumeCheckerModal();
+  resumeOverlay.style.display = 'flex';
+}
+
+function openResumeModal() {
+  const state = getCheckerState();
+  state.open = true;
+  state.status = 'idle';
+  renderResumeModal();
+}
+
+function closeResumeModal() {
+  resumeOverlay.style.display = 'none';
+  resetCheckerState();
+}
+
+function renderPrepModal() {
+  prepEl.innerHTML = renderInterviewPrepModal();
+  prepOverlay.style.display = 'flex';
+}
+
+function openPrepModal() {
+  const state = getPrepState();
+  state.open = true;
+  state.status = 'idle';
+  renderPrepModal();
+}
+
+function closePrepModal() {
+  prepOverlay.style.display = 'none';
+  resetPrepState();
 }

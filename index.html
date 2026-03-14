@@ -24,6 +24,8 @@
         </div>
       </div>
       <div class="header-actions">
+        <button class="btn btn-secondary" id="btn-ai-resume" title="AI Resume Checker">📄 Check Resume</button>
+        <button class="btn btn-secondary" id="btn-ai-prep" title="AI Interview Prep">🎯 Prep Interview</button>
         <button class="btn btn-secondary" id="btn-export-csv" title="Export to Excel">⬇️ Export CSV</button>
         <button class="btn btn-gmail" id="btn-gmail-import">📧 Import from Gmail</button>
         <button class="btn btn-primary" id="btn-add-job">+ Add Application</button>
@@ -51,6 +53,16 @@
   <!-- ── Gmail Import Modal ───────────────────────────────── -->
   <div class="modal-overlay" id="gmail-overlay" style="display:none">
     <div class="modal" id="gmail-modal" style="max-width:680px"></div>
+  </div>
+
+  <!-- ── Resume Checker Modal ───────────────────────────────── -->
+  <div class="modal-overlay" id="resume-overlay" style="display:none">
+    <div class="modal" id="resume-modal" style="max-width:800px"></div>
+  </div>
+
+  <!-- ── Interview Prep Modal ───────────────────────────────── -->
+  <div class="modal-overlay" id="prep-overlay" style="display:none">
+    <div class="modal" id="prep-modal" style="max-width:800px"></div>
   </div>
 
   <script type="module" src="js/app.js"></script>
