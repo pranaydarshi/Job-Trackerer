@@ -15,7 +15,27 @@ across multiple platforms — no account, no server, no build step required.
 - **Sort** by any column (click header to toggle asc/desc)
 - **Persistent storage**: data saved in browser localStorage automatically
 - **Toast notifications**: feedback on add / edit / delete actions
-- **Keyboard shortcut**: press `Escape` to close any open modal
+- **Gmail Integration**: Connect your Gmail account to securely scan your inbox for confirmation emails from major portals (Naukri, LinkedIn, Indeed, Glassdoor, etc.) and auto-import them into the dashboard.
+
+---
+
+## How to Run Locally
+
+### 1. Run the Backend (Required for Gmail Import)
+Navigate to the `server/` directory and create a `.env` file with your Google Cloud OAuth credentials (see `server/.env.example`).
+```bash
+cd server
+npm install
+node index.js
+```
+The backend API and Google OAuth handler will run on `http://localhost:3001`.
+
+### 2. Run the Frontend UI
+Because this project uses ES Modules (`type="module"`), it must be served via HTTP to avoid CORS restrictions on local files.
+```bash
+npx -y http-server -p 3000 -c-1
+```
+Open your browser to `http://127.0.0.1:3000` to view the app.
 
 ---
 
@@ -32,33 +52,54 @@ across multiple platforms — no account, no server, no build step required.
 
 ## Project Structure
 
-```
+This project is divided into a lightweight vanilla HTML/JS frontend and a Node.js backend (which is only required for the Gmail integration).
+
+```text
 job-tracker/
 │
 ├── index.html                  Entry point — app shell + modal containers
-│
 ├── css/
 │   └── styles.css              All styles: tokens, layout, components, responsive
+├── js/
+│   ├── app.js                  Glue layer: subscribe → render, one-time event delegation
+│   ├── constants/
+│   │   └── config.js           Platforms, statuses, badge classes, column defs, storage key
+│   ├── state/
+│   │   └── store.js            State management — single source of truth, named actions
+│   ├── utils/
+│   │   ├── helpers.js          Pure functions: generateId, formatDate, computeStats, filterJobs, sortJobs, esc
+│   │   └── storage.js          localStorage wrapper: loadJobs / saveJobs
+│   └── components/
+│       ├── stats.js            Dashboard stat cards  (jobs) → HTML
+│       ├── filterBar.js        Search + filter bar   (filters, counts) → HTML
+│       ├── jobTable.js         Applications table    (jobs, filters) → HTML
+│       ├── jobForm.js          Add/Edit modal + Delete confirm + validateJobForm + extractFormData
+│       └── gmailImport.js      Gmail OAuth connection, email scanning, and parsing UI
 │
-└── js/
-    ├── app.js                  Glue layer: subscribe → render, one-time event delegation
-    │
-    ├── constants/
-    │   └── config.js           Platforms, statuses, badge classes, column defs, storage key
-    │
-    ├── state/
-    │   └── store.js            State management — single source of truth, named actions
-    │
-    ├── utils/
-    │   ├── helpers.js          Pure functions: generateId, formatDate, computeStats, filterJobs, sortJobs, esc
-    │   └── storage.js          localStorage wrapper: loadJobs / saveJobs
-    │
-    └── components/
-        ├── stats.js            Dashboard stat cards  (jobs) → HTML
-        ├── filterBar.js        Search + filter bar   (filters, counts) → HTML
-        ├── jobTable.js         Applications table    (jobs, filters) → HTML
-        └── jobForm.js          Add/Edit modal + Delete confirm + validateJobForm + extractFormData
+└── server/                     (Backend for Gmail API)
+    ├── package.json            Dependencies: express, googleapis, express-session, cors, dotenv
+    ├── .env                    OAuth credentials (GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET)
+    ├── index.js                Express server: /auth/google, /auth/status, /api/scan-emails
+    └── emailParser.js          Regex patterns to parse Job Platform emails (Naukri, LinkedIn, etc.)
 ```
+
+---
+
+## Tech Stack (For AI Context)
+
+### Frontend (Client-Side)
+*   **Architecture:** Vanilla Single Page Application (SPA). No frameworks (React/Vue/Angular) and no build steps (Webpack/Vite).
+*   **HTML5/CSS3:** Semantic HTML, Flexbox/Grid for layout, native CSS variables for centralized token management.
+*   **JavaScript (ES6):** Pure native ES Modules.
+*   **State Management:** Unidirectional data flow (similar to Redux). Events trigger `store.js` actions -> updates state -> calls `render()` -> pure functions generate new HTML strings -> inject via `innerHTML`.
+*   **Event Handling:** Heavy use of **Event Delegation**. All click/input handlers live on the global `document` node in `app.js` to avoid re-attaching listeners after DOM updates.
+*   **Storage:** Browser `localStorage`.
+
+### Backend (Server-Side)
+*   **Runtime:** Node.js + Express.js
+*   **Authentication:** Google OAuth 2.0 via `googleapis`.
+*   **Session Management:** `express-session` keeps access/refresh tokens in server memory, preventing token leakage to the frontend browser.
+*   **CORS:** Configured to allow `http://localhost:3000` to hit backend endpoints (`http://localhost:3001`).
 
 ---
 
